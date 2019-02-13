@@ -27,6 +27,18 @@ ri_constraints = None
 data_tables = {}
 
 
+# TODO This is a bit of a hack and we should clean up.
+# We should load information from database or configuration file.
+people = RDBDataTable("lahman2017.people", key_columns=['playerID'])
+data_tables["lahman2017.people"] = people
+batting = RDBDataTable("lahman2017.batting", key_columns=['playerID', 'yearID', 'teamID', 'stint'])
+data_tables["lahman2017.batting"] = batting
+appearances = RDBDataTable("lahman2017.appearances", key_columns=['playerID', 'yearID', 'teamID'])
+data_tables["lahman2017.appearances"] = appearances
+offices = RDBDataTable("classiccars.offices", key_columns=['officeCode'])
+data_tables["classiccars.offices"] = offices
+
+
 def get_data_table(table_name):
 
     result = data_tables.get(table_name, None)
@@ -36,13 +48,11 @@ def get_data_table(table_name):
 
     return result
 
-
 def get_by_template(table_name, template, field_list=None, limit=None, offset=None, order_by=None, commit=True):
 
     dt = get_data_table(table_name)
     result = dt.find_by_template(template, field_list, limit, offset, order_by, commit)
     return result.get_rows()
-
 
 def get_by_primary_key(table_name, key_fields, field_list=None, commit=True):
 

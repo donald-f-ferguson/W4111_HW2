@@ -35,20 +35,30 @@ def handle_resource(dbname, resource_name, primary_key):
 
     try:
 
+        # The design pattern is that the primary key comes in in the form value1_value2_value3
         key_columns = primary_key.split(key_delimiter)
+
+        # Merge dbname and resource names to form the dbschema.tablename element for the resource.
+        # This should probably occur in the data service and not here.
         resource = dbname + "." + resource_name
 
+        # Look for the fields=f1,f2, ... argument in the query parameters.
         field_list = request.args.get('fields', None)
-        field_list = field_list.split(",")
+        if field_list is not None:
+            field_list = field_list.split(",")
 
+        # Call the data service layer.
         result = ds.get_by_primary_key(resource, key_columns, field_list=field_list)
 
         if result:
+            # We managed to find a row. Return JSON data and 200
             result_data = json.dumps(result, default=str)
             resp = Response(result_data, status=200, mimetype='application/json')
         else:
+            # We did not get an exception and we did not get data, therefore this is 404 not found.
             resp = Response("Not found", status=404, mimetype="text/plain")
     except Exception as e:
+        # We need a better overall approach to generating correct errors.
         utils.debug_message("Something awlful happened, e = ", e)
 
     return resp
@@ -60,11 +70,17 @@ def handle_collection(dbname, resource_name):
 
     try:
 
+        # Form the compound resource names dbschema.table_name
         resource = dbname + "." + resource_name
 
+        # Get the field list if it exists.
         field_list = request.args.get('fields', None)
-        field_list = field_list.split(",")
+        if field_list is not None:
+            field_list = field_list.split(",")
 
+        # The query string is of the form ?f1=v1&f2=v2& ...
+        # This maps to a query template of the form { "f1" : "v1", ... }
+        # We need to ignore the fields parameters.
         tmp = None
         for k,v in request.args.items():
             if not k == 'fields':
@@ -72,6 +88,7 @@ def handle_collection(dbname, resource_name):
                     tmp = {}
                 tmp[k] = v
 
+        # Find by template.
         result = ds.get_by_template(resource, tmp, field_list=field_list)
 
         if result:
