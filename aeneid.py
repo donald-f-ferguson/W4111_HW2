@@ -20,8 +20,66 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello_world():
-    return 'You probably want to go either to the content home page or call an API at /api'
+    return """
+            You probably want to go either to the content home page or call an API at /api.
+            When you despair during completing the homework, remember that
+            Audentes fortuna iuvat.
+            """
 
+@app.route('/explain', methods=['GET', 'PUT', 'POST', 'DELETE'])
+def explain_what():
+
+    result = "Explain what?"
+    response = Response(result, status=200, mimetype="text/plain")
+
+    return response
+
+@app.route('/explain/<concept>', methods=['GET', 'PUT', 'POST', 'DELETE'])
+def explain(concept):
+
+    if concept == "route":
+        result = """
+                    A route definition has the form /x/y/z.
+                    If an element in the definition is of the for <x>,
+                    Flask passes the element's value to a parameter x in the function definition.
+                    """
+    elif concept == 'request':
+        result = """
+                http://flask.pocoo.org/docs/1.0/api/#incoming-request-data
+                explains the request object.
+            """
+    elif concept == 'method':
+        method = request.method
+
+        result = """
+                    The @app.route() example shows how to define eligible methods.
+                    explains the request object. The Flask framework request.method
+                    is how you determine the method sent.
+                    
+                    This request sent the method:
+                    """ \
+                    + request.method
+    elif concept == 'query':
+        result = """
+                    A query string is of the form '?param1=value1&param2=value2.'
+                    Try invoking ' http://127.0.0.1:5000/explain/query?param1=value1&param2=value2.
+                    
+                """
+
+        if len(request.args) > 0:
+            result += """
+                Query parameters are:
+                """
+            qparams = str(request.args)
+            result += qparams
+    else:
+        result = """
+            I should not have to explain all of these concepts. You should be able to read the documents.
+        """
+
+    response = Response(result, status=200, mimetype="text/plain")
+
+    return response
 
 @app.route('/api')
 def api():
