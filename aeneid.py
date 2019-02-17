@@ -37,6 +37,8 @@ def explain_what():
 @app.route('/explain/<concept>', methods=['GET', 'PUT', 'POST', 'DELETE'])
 def explain(concept):
 
+    mt = "text/plain"
+
     if concept == "route":
         result = """
                     A route definition has the form /x/y/z.
@@ -72,12 +74,48 @@ def explain(concept):
                 """
             qparams = str(request.args)
             result += qparams
+    elif concept == "body":
+        if request.method != 'PUT' and request.method != 'POST':
+            result = """
+                Only PUT and GET have bodies/data.
+            """
+        else:
+            result = """
+                The content type was
+            """ + request.content_type
+
+            if "text/plain" in request.content_type:
+                result += """
+                You sent plain text.
+                
+                request.data will contain the body.
+                
+                Your plain text was:
+                
+                """ + str(request.data) + \
+                """
+                
+                Do not worry about the b'' thing. That is Python showing the string encoding.
+                """
+            elif "application/json" in request.content_type:
+                js = request.get_json()
+                mt = "application/json"
+                result = {
+                    "YouSent": "Some JSON. Cool!",
+                    "Note": "The cool kids use JSON.",
+                    "YourJSONWas": js
+                }
+                result = json.dumps(result, indent=2)
+            else:
+                """
+                I have no idea what you sent.
+                """
     else:
         result = """
             I should not have to explain all of these concepts. You should be able to read the documents.
         """
 
-    response = Response(result, status=200, mimetype="text/plain")
+    response = Response(result, status=200, mimetype=mt)
 
     return response
 
